@@ -1,0 +1,103 @@
+{% load humanize %}
+<style>
+    #uni_modal .modal-footer {
+        display: none;
+    }
+</style>
+<div class="container-fluid" id="outprint">
+    <div class="lh-1">
+        <header id="header" class="header">
+            <div class="top-left">
+                <div class="navbar-header">
+                    <!-- Centering the image and adding alt text -->
+                    <center><a href="https://imgur.com/yQhJnC2"><img src="https://i.imgur.com/yQhJnC2t.jpg" title="source: imgur.com" alt="Image" /></a></center>
+                    <a id="menuToggle" class="menutoggle"><i class="fa fa-bars"></i></a>
+                </div>
+            </div>
+        </header>
+        <center><small class="fw-normal">Market 2, Fishport Complex, NBBS, Navotas City</small></center>
+        <center><small class="fw-normal">Contact No: __________________</small></center>
+    </div>
+    <center><small class="fw-normal">_____________________________________________________________________</small></center>
+    <div class="lh-sm">
+        <div>
+            <span style="margin-right: 5px;">DATE:</span>{{ transaction.date_added|date:'Y-m-d H:i' }}<br>
+            <span style="margin-right: 5px;">CUSTOMER:</span>{{ transaction.customer_name }} <br>
+            <span style="margin-right: 5px;">CONTACT #:</span>{{ transaction.customer_number }}<br>
+            <span style="margin-right: 5px;">MODE OF PAYMENT:</span>{{ transaction.payment_method|upper }}<br>
+            <span style="margin-right: 5px;">INV #:</span>{{ transaction.code }} 
+        </div>
+    </div>
+    <center><small class="fw-normal">_____________________________________________________________________</small></center>
+    <div class="lh-1">
+        <div class="d-flex w-100 align-items-end border-bottom">
+            <div class="col-2 text-center fw-normal">Qty</div>
+            <div class="col-3 text-center fw-normal">Items</div>
+            <div class="col-3 text-center fw-normal">Price</div>
+            <div class="col-4 text-end fw-normal">Amount</div>
+        </div>
+        {% for item in salesItems %}
+        <div class="d-flex w-100 align-items-end">
+            <div class="col-2 text-center fw-normal">{{ item.qty|intcomma|floatformat:0 }}</div>
+            <div class="col-3 text-center fw-normal">{{ item.product_id }}</div>    
+            <div class="col-3 text-center fw-normal">{{ item.price|floatformat:0|intcomma }}</div>
+            <div class="col-4 text-end fw-normal">{{ item.total|floatformat:0|intcomma }}</div>
+        </div>
+        {% endfor %}
+        <center><small class="fw-normal">_____________________________________________________________________</small></center>
+        <div class="d-flex w-100 align-items-end">
+            <div class="col-6 text-start fw-bold">TOTAL QTY</div>
+            <div class="col-6 text-end fw-bold">{{ transaction.total_qty|floatformat:0|intcomma }}</div>
+        </div>  
+        <div class="d-flex w-100 align-items-end">
+            <div class="col-6 text-start fw-bold">TOTAL AMOUNT</div>
+            <div class="col-6 text-end fw-bold">{{ transaction.grand_total|floatformat:0|intcomma}}</div>
+        </div>
+        <div class="d-flex w-100 align-items-end">
+               <div class="col-6 text-start fw-normal">PAYMENT RECEIVED</div>
+            <div class="col-6 text-end fw-normal">{{ transaction.tendered_amount|floatformat:0|intcomma}}</div>
+        </div>
+        <div class="d-flex w-100 align-items-end">  
+            <div class="col-6 text-start fw-bold">CHANGE</div>
+            <div class="col-6 text-end fw-bold">{{ transaction.amount_change|floatformat:0|intcomma }}</div>
+        </div>
+        <div class="d-flex w-100 align-items-end">
+            <div class="col-6 text-start fw-bold">BALANCE</div>
+            <div class="col-6 text-end fw-bold">{{ transaction.amount_balance|floatformat:0|intcomma }}</div>
+        </div>
+        <div class="modal-body">
+            <h5 class="modal-title">Checkout by:______________</h5>
+            <p>{{ user_name }}</p>
+            <!-- Other receipt details go here -->
+        </div>
+    </div>  
+</div>
+<div class="clear-fix py-3"></div>
+<div class="d-flex w-100 justify-content-end">
+    <button class="btn btn-light bg-gradient border rounded-0 btn-sm me-1" type="button" id="receipt_print"><i class="mdi mdi-printer"></i> Print</button>
+    <button class="btn btn-secondary bg-gradient border rounded-0 btn-sm" type="button" data-bs-dismiss="modal"><i class="mdi mdi-close"></i> Close</button>
+</div>
+
+<script>
+$(function() {
+    $('#receipt_print').click(function() {
+        console.log("Printing receipt...");
+        var head = $('head').clone();
+        var p = $('#outprint').clone();
+        var el = $("<div>");    
+        el.append(head);
+        el.find('title').text("Receipt - Print View");
+        el.append(p);
+        start_loader();
+        var nw = window.open('', '_blank', 'width=800,height=800,left=300,top=200');
+        nw.document.write(el.html());
+        nw.document.close();    
+        nw.onload = function() {
+            setTimeout(() => {
+                nw.print();
+                console.log("Receipt printed.");
+            }, 300);
+        };
+    });
+});
+</script>

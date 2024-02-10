@@ -1,0 +1,111 @@
+{% extends "posApp/base.html" %}
+{% load humanize %}
+
+{% block pageContent %}
+<div class="mdc-layout-grid__cell stretch-card mdc-layout-grid__cell--span-12">
+    <div class="mdc-card py-2">
+        <div class="d-flex justify-content-between align-items-center">
+            <h4 class="card-title mb-0">Inventory</h4>
+        </div>
+    </div>
+</div>
+<div class="mdc-layout-grid__cell stretch-card mdc-layout-grid__cell--span-12">
+    <div class="mdc-card">
+        <div class="table-responsive">
+            <table class="table table-striped table-bordered">
+                <colgroup>
+                    <col width="5%">
+                    <col width="25%">
+                    <col width="25%">
+                    <col width="25%">
+                    <col width="20%">
+                </colgroup>
+                <thead>
+                    <tr>
+                        <th class="text-center py-1">#</th>
+                        <th class="text-center py-1">Customer Name</th>
+                        <th class="text-center py-1">Contact Info</th>
+                        <th class="text-center py-1">Items Purchased</th>
+                        <th class="text-center py-1">Purchase Date</th>
+                        <th class="text-center py-1">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in inventory_data %}
+                    <tr>
+                        <td class="px-2 py-1 text-center">{{ item.id }}</td>
+                        <td class="px-2 py-1 text-center">{{ item.customer_name }}</td>
+                        <td class="px-2 py-1 text-center">{{ item.customer_number }}</td>
+                        <td class="px-2 py-1 text-center">{{ item.items_purchased }}</td>
+                        <td class="px-2 py-1 text-center">{{ item.purchase_date|date:'Y-m-d H:i' }}</td>
+                        <td class="px-2 py-1 text-center">
+                            <button class="mdc-button mdc-button--raised p-1 icon-button filled-button--light mdc-ripple-upgraded view-data" type="button" data-id="{{ item.id }}" title="View Receipt">
+                                <i class="material-icons mdc-button__icon">receipt</i>
+                            </button>
+                            <button class="mdc-button mdc-button--raised p-1 icon-button filled-button--danger mdc-ripple-upgraded delete-data" type="button" data-id="{{ item.id }}" data-code="{{ item.code }}" title="Delete">
+                                <i class="material-icons mdc-button__icon">deleteoutline</i>
+                            </button>
+                            <!-- Add a button for additional actions or details -->
+                            <button class="mdc-button mdc-button--raised p-1 icon-button filled-button--primary mdc-ripple-upgraded additional-action" type="button" data-id="{{ item.id }}" title="Additional Action">
+                                <i class="material-icons mdc-button__icon">info</i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock pageContent %}
+
+{% block ScriptBlock %}
+<script>
+$(function() {
+    $('.view-data').click(function() {
+        // Add logic for viewing details (replace the URL with the correct endpoint)
+        uni_modal("Inventory Details", "{% url 'inventory' %}?id=" + $(this).attr('data-id'));
+    });
+
+    $('.delete-data').click(function() {
+        // Add logic for deleting an inventory item
+        var itemId = $(this).attr('data-id');
+        _conf("Are you sure to delete item #" + itemId + "?", "delete_inventory", [itemId]);
+    });
+
+    // Add a listener for the additional action button
+    $('.additional-action').click(function() {
+        var inventoryId = $(this).attr('data-id');
+        uni_modal("Additional Action", "{% url 'additional-action' }inventory_id=inventoryId %");
+    });
+});
+
+    function delete_inventory(itemId) {
+        start_loader();
+        $.ajax({
+            headers: {
+                "X-CSRFToken": '{{csrf_token}}'
+            },
+            url: "{% url 'delete-inventory' %}",
+            method: "POST",
+            data: {
+                id: itemId
+            },
+            dataType: "json",
+            error: err => {
+                console.log(err);
+                alert_toast("An error occurred.", 'error');
+                end_loader();
+            },
+            success: function(resp) {
+                if (typeof resp == 'object' && resp.status == 'success') {
+                    location.reload();
+                } else {
+                    alert_toast("An error occurred.", 'error');
+                    end_loader();
+                }
+            }
+        });
+    }
+</script>
+{% endblock ScriptBlock %}

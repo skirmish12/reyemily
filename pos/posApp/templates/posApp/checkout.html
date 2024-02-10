@@ -1,0 +1,52 @@
+{% load humanize %}
+<div class="container-fluid">
+    <form action="" id="checkout-form">
+        <div class="form-group mb-3">
+            <label for="payable_amount" class="control-label">Payable Amount</label>
+            <input type="text" id="payable_amount" class="form-control form-control-lg rounded-0 text-end" value="{{ grand_total|intcomma }}" required disabled>
+        </div>
+        <div class="form-group mb-3">
+            <label for="tendered_amount" class="control-label">Amount Tendered</label>
+            <input type="number" step="any" id="tendered_amount" class="form-control form-control-lg rounded-0 text-end" value="0" required>
+        </div>
+        <div class="form-group mb-3">
+            <label for="payment_change" class="control-label">Change</label>
+            <input type="text" id="payment_change" class="form-control form-control-lg rounded-0 text-end" value="0" required disabled>
+        </div>
+        <div class="form-group mb-3">
+            <label for="payment_balance" class="control-label">Balance</label>
+            <input type="text" id="payment_balance" class="form-control form-control-lg rounded-0 text-end" value="0" required disabled>
+        </div>
+    </form>
+</div>
+<script>
+    $(function() {
+        $('#tendered_amount').on('input keypress keyup keydown', function() {
+            var tendered_amount = parseFloat($('#tendered_amount').val().replace(/,/gi, '')) || 0;
+            var payable = parseFloat($('#payable_amount').val().replace(/,/gi, '')) || 0;
+            var balance = tendered_amount - payable;
+            var change = tendered_amount - payable;
+
+            // Update tendered_amount to ensure it's a non-negative value
+            tendered_amount = tendered_amount >= 0 ? tendered_amount : 0;
+            $('[name="tendered_amount"]').val(tendered_amount);
+
+            if (balance >= 0) {
+                $('#payment_change').val(change.toLocaleString('en-US'));
+                $('#payment_balance').val('0');
+                $('[name="amount_change"]').val(change);
+                $('[name="amount_balance"]').val('0'); // Set amount_balance to 0 when there's no balance.
+            } else {
+                $('#payment_balance').val(balance.toLocaleString('en-US'));
+                $('#payment_change').val('0');
+                $('[name="amount_balance"]').val(balance);
+                $('[name="amount_change"]').val('0'); // Set amount_change to 0 when there's no change.
+            }
+        });
+
+        $('#checkout-form').submit(function(e) {
+            e.preventDefault();
+            $('#pos-form').submit();
+        });
+    });
+</script>
